@@ -10,34 +10,44 @@ part 'video_call_event.dart';
 part 'video_call_state.dart';
 
 class VideoCallBloc extends Bloc<VideoCallEvent, VideoCallState> {
-  
   MediaStream? localStream;
-  
+
   VideoCallBloc() : super(VideoCallInitial()) {
     final VideoCallRepository repository = locator.get<VideoCallRepository>();
     on<RoomCheck>((event, emit) async {
-      MediaStream stream = await navigator.mediaDevices
-          .getUserMedia({'video': true, 'audio': true});
-      localStream = stream;
-      emit(VideoCallInitialized(stream: stream));
-      final roomResult = await repository.checkRoom();
-      roomResult.fold(
-        (l) async {
-          if (l.message == 'No Room') {
-            emit(VideoCallCreating(localStream: stream));
-          } else {
-            emit(VideoCallError(l.message));
-          }
-        },
-        (roomId) async {
-          print('RoomId: $roomId');
-          emit(VideoCallConnecting(
-            roomId: roomId,
-            localStream: localStream!,
-          ));
-                 },
-      );
+      await repository.getUserMediaStream().then(
+            (streamRes) => streamRes
+                .fold((l) => emit(VideoCallError(l.message)), (r) async {
+              final MediaStream stream = r;
+              localStream = stream;
+              emit(VideoCallInitialized(stream: stream));
+              await repository.checkRoom().then(
+                    (value) => value.fold(
+                      (l) async {
+                        if (l.message == 'No Room') {
+                          emit(VideoCallCreating(localStream: stream));
+                        } else {
+                          emit(VideoCallError(l.message));
+                        }
+                      },
+                      (roomId) async {
+                        print('RoomId: $roomId');
+                        emit(VideoCallConnecting(
+                          roomId: roomId,
+                          localStream: localStream!,
+                        ));
+                      },
+                    ),
+                  );
+            }),
+          );
+    });
+
+    on<SwitchCamera>((event, emit) async {
+      if (localStream != null) {
+        final res = await repository.switchCamera(localStream!);
+        res.fold((l) => null, (r) => null);
+      }
     });
   }
-
 }

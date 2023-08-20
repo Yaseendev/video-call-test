@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:video_conf_test/logic/video_call_bloc/video_call_bloc.dart';
+import 'package:video_conf_test/logic/video_call_connection_cubit/video_call_connection_cubit.dart';
 import 'package:video_conf_test/presentation/screens/home_screen.dart';
 import 'package:video_conf_test/utils/services/service_locator.dart';
 
@@ -29,8 +30,12 @@ class MainApp extends StatelessWidget {
         BlocProvider<VideoCallBloc>(
           create: (context) => VideoCallBloc(),
         ),
+        BlocProvider<VideoCallConnectionCubit>(
+          create: (context) => VideoCallConnectionCubit(),
+        ),
       ],
       child: MaterialApp(
+        debugShowCheckedModeBanner: false,
         theme: ThemeData.dark(),
         home:
             // MyHomePage(),

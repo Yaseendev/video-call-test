@@ -9,3 +9,9 @@ class RoomCheck extends VideoCallEvent{
   @override
   List<Object> get props => [];
 }
+
+class SwitchCamera extends VideoCallEvent {
+  
+  @override
+  List<Object> get props => [];
+}

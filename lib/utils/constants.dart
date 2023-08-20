@@ -1,8 +1,5 @@
-class SignallingService {
-  SignallingService._();
-  static final instance = SignallingService._();
-
-  static const Map<String, dynamic> configuration = {
+class ServerConfig {
+  static const Map<String, dynamic> servers = {
     'iceServers': [
       {
         'urls': [
@@ -13,6 +10,16 @@ class SignallingService {
         // 'username': 'saritest',
         // 'credential': 'test546321'
       }
+    ]
+  };
+
+  static const Map<String, dynamic> configuration = {
+    'mandatory': {
+      'OfferToReceiveAudio': true,
+      'OfferToReceiveVideo': true,
+    },
+    'optional': [
+      {'DtlsSrtpKeyAgreement': true},
     ]
   };
 }

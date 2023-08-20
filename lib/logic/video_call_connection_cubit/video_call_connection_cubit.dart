@@ -28,7 +28,7 @@ class VideoCallConnectionCubit extends Cubit<VideoCallConnectionState> {
       print('Got candidate: ${candidate.toMap()}');
       callerCandidatesCollection.add(candidate.toMap());
     };
-
+    
     RTCSessionDescription offer = await peerConnection!.createOffer();
     await peerConnection!.setLocalDescription(offer);
     print('Created offer: $offer');
@@ -83,13 +83,15 @@ class VideoCallConnectionCubit extends Cubit<VideoCallConnectionState> {
   }
 
   void joinRoom(String roomId, MediaStream localStream) async {
-        DocumentReference roomRef = repository.databaseProvider.remoteDB.collection('rooms').doc('$roomId');
+    DocumentReference roomRef =
+        repository.databaseProvider.remoteDB.collection('rooms').doc('$roomId');
     var roomSnapshot = await roomRef.get();
     print('Got room ${roomSnapshot.exists}');
 
     if (roomSnapshot.exists) {
       //print('Create PeerConnection with configuration: $configuration');
-      peerConnection = await createPeerConnection(SignallingService.configuration);
+      peerConnection =
+          await createPeerConnection(SignallingService.configuration);
 
       registerPeerConnectionListeners();
 
@@ -152,23 +154,31 @@ class VideoCallConnectionCubit extends Cubit<VideoCallConnectionState> {
         });
       });
     }
-  } 
+  }
 
   void registerPeerConnectionListeners() {
-    peerConnection?.onIceGatheringState = (RTCIceGatheringState state) {
-      print('ICE gathering state changed: $state');
+    peerConnection?.onConnectionState = (RTCPeerConnectionState rtcState) {
+      print('Connection state change: $rtcState');
+      if (rtcState == RTCPeerConnectionState.RTCPeerConnectionStateConnecting) {
+        emit(VideoCallRemoteConnecting());
+      } else if (rtcState ==
+          RTCPeerConnectionState.RTCPeerConnectionStateFailed) {
+        emit(VideoCallRemoteConnectionFailed());
+      } else if (rtcState ==
+          RTCPeerConnectionState.RTCPeerConnectionStateConnected) {
+        emit(VideoCallRemoteConnected());
+      }
     };
 
-    peerConnection?.onConnectionState = (RTCPeerConnectionState state) {
-      print('Connection state change: $state');
+    peerConnection?.onSignalingState = (RTCSignalingState rtcState) {
+      print('Signaling state change: $rtcState');
     };
 
-    peerConnection?.onSignalingState = (RTCSignalingState state) {
-      print('Signaling state change: $state');
-    };
-
-    peerConnection?.onIceGatheringState = (RTCIceGatheringState state) {
-      print('ICE connection state change: $state');
+    peerConnection?.onIceGatheringState = (RTCIceGatheringState rtcState) {
+      print('ICE connection state change: $rtcState');
+      if (rtcState == RTCIceGatheringState.RTCIceGatheringStateComplete) {
+        emit(VideoCallConnectionCreated());
+      }
     };
 
     peerConnection?.onAddStream = (MediaStream stream) {

@@ -18,3 +18,8 @@ class VideoCallRemoteStreamAdded extends VideoCallConnectionState {
   @override
   List<Object> get props => [remoteStream];  
 }
+
+class VideoCallConnectionCreated extends VideoCallConnectionState {}
+class VideoCallRemoteConnecting extends VideoCallConnectionState {}
+class VideoCallRemoteConnected extends VideoCallConnectionState {}
+class VideoCallRemoteConnectionFailed extends VideoCallConnectionState {}
