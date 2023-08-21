@@ -34,16 +34,30 @@ class WebRTCService {
     }
   }
 
+  // static bool toggleMicActivation(
+  //     MediaStream mediaStream, bool micActivationStatus) {
+  //   final MediaStreamTrack audioTrack = mediaStream.getAudioTracks().first;
+  //   audioTrack.enableSpeakerphone(!micActivationStatus);
+  //   //setMicrophoneMute(!micActivationStatus);
+  //   return !micActivationStatus;
+  // }
+
   static bool toggleMicActivation(
       MediaStream mediaStream, bool micActivationStatus) {
-    final MediaStreamTrack audioTrack = mediaStream.getAudioTracks().first;
-    audioTrack.enableSpeakerphone(!micActivationStatus);
-    //setMicrophoneMute(!micActivationStatus);
-    return !micActivationStatus;
+    final audioTrack = mediaStream.getAudioTracks().first;
+    try {
+      Helper.setMicrophoneMute(
+        micActivationStatus,
+        audioTrack,
+      );
+      return true;
+    } catch (e) {
+      throw e.toString();
+    }
   }
 
   static Future<RTCPeerConnection> createPeerConnectionStream(
-    MediaStream mediaStream) async {
+      MediaStream mediaStream) async {
     final iceServers = ServerConfig.servers;
 
     final configuration = ServerConfig.configuration;

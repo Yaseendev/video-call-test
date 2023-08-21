@@ -60,9 +60,15 @@ class _HomeScreenState extends State<HomeScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: [
                       IconButton(
-                        onPressed: () {},
+                        onPressed: () {
+                          context
+                              .read<VideoCallBloc>()
+                              .add(SwitchMicActivation(mute: !state.isMute));
+                        },
                         icon: Icon(
-                          Icons.mic_rounded,
+                          state.isMute
+                              ? Icons.mic_off_rounded
+                              : Icons.mic_rounded,
                           size: 30,
                         ),
                       ),

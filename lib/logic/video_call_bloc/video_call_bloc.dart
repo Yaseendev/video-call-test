@@ -49,5 +49,19 @@ class VideoCallBloc extends Bloc<VideoCallEvent, VideoCallState> {
         res.fold((l) => emit(VideoCallError(l.message)), (r) => null);
       }
     });
+
+    on<SwitchMicActivation>((event, emit) async {
+      if (localStream != null) {
+        final res = await repository.toggleMicMute(localStream!, event.mute);
+        res.fold((l) => emit(VideoCallError(l.message)), (r) => emit(VideoCallMute(event.mute)));
+      }
+    });
+
+    on<SwitchSpeakerActivation>((event, emit) async {
+      if (localStream != null) {
+        final res = await repository.toggleMicMute(localStream!, event.enabled);
+        res.fold((l) => emit(VideoCallError(l.message)), (r) => emit(VideoCallSpeakerChanged(event.enabled)));
+      }
+    });
   }
 }

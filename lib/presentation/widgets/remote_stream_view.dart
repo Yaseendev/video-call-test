@@ -53,31 +53,41 @@ class _RemoteStreamViewState extends State<RemoteStreamView> {
                   _remoteRenderer,
                   objectFit: RTCVideoViewObjectFit.RTCVideoViewObjectFitCover,
                   placeholderBuilder: (context) => StreamPlaceholder(
-                    label: 'Initialzing',
+                    label: 'Initializing',
                   ),
                 ),
                 Align(
                   alignment: Alignment.topRight,
                   child: Padding(
                     padding: const EdgeInsets.all(8.0),
-                    child: ElevatedButton(
-                      onPressed: () {},
-                      style: ElevatedButton.styleFrom(
-                        shape: CircleBorder(),
-                        backgroundColor: Colors.grey.withOpacity(.9),
-                        padding: EdgeInsets.all(10),
-                      ),
-                      child: Icon(
-                        Icons.volume_up_rounded,
-                        size: 28,
-                      ),
+                    child: BlocBuilder<VideoCallBloc, VideoCallState>(
+                      builder: (context, state) {
+                        return ElevatedButton(
+                          onPressed: () {
+                            context
+                                .read<VideoCallBloc>()
+                                .add(SwitchSpeakerActivation(enabled: !state.isSpeakerEnabled));
+                          },
+                          style: ElevatedButton.styleFrom(
+                            shape: CircleBorder(),
+                            backgroundColor: Colors.grey.withOpacity(.9),
+                            padding: EdgeInsets.all(10),
+                          ),
+                          child: Icon(
+                            state.isSpeakerEnabled
+                                ? Icons.volume_up_rounded
+                                : Icons.volume_off_rounded,
+                            size: 28,
+                          ),
+                        );
+                      },
                     ),
                   ),
                 ),
               ],
             );
           }
-          return StreamPlaceholder(label: 'Initialzing');
+          return StreamPlaceholder(label: 'Loading');
         },
       ),
     );

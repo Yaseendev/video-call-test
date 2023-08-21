@@ -38,6 +38,14 @@ class VideoCallRepository {
     }
   }
 
+  Future<Either<Failure, bool>> toggleMicMute(MediaStream mediaStream, bool mute) async {
+    try {
+      return Right(webRTCProvider.toggleMic(mediaStream, mute));
+    } catch (e) {
+      return Left(Failure(e.toString()));
+    }
+  }
+
   // Future<Either<Failure, String>> createRoom() async {
   //  RTCPeerConnection peerConnection = await createPeerConnection(SignallingService.configuration);
 

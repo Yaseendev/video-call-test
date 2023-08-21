@@ -9,4 +9,8 @@ class WebRTCProvider {
     Future<bool> switchCamera(MediaStream mediaStream) async {
     return await WebRTCService.switchCamera(mediaStream);
   }
+
+    bool toggleMic(MediaStream mediaStream, bool mute) {
+    return WebRTCService.toggleMicActivation(mediaStream, mute);
+  }
 }
