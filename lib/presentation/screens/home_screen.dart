@@ -37,6 +37,8 @@ class _HomeScreenState extends State<HomeScreen> {
           context
               .read<VideoCallConnectionCubit>()
               .joinRoom(state.roomId, state.localStream);
+        } else if (state is VideoCallError) {
+          //TODO: show error
         } //else if (state is VideoCallConnected) {
         //   _remoteRenderer.srcObject = state.stream;
         //   setState(() {});

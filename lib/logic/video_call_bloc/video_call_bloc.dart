@@ -46,7 +46,7 @@ class VideoCallBloc extends Bloc<VideoCallEvent, VideoCallState> {
     on<SwitchCamera>((event, emit) async {
       if (localStream != null) {
         final res = await repository.switchCamera(localStream!);
-        res.fold((l) => null, (r) => null);
+        res.fold((l) => emit(VideoCallError(l.message)), (r) => null);
       }
     });
   }
