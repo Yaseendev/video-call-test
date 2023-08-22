@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:video_conf_test/logic/video_call_bloc/video_call_bloc.dart';
 import 'package:video_conf_test/logic/video_call_connection_cubit/video_call_connection_cubit.dart';
-import 'package:video_conf_test/signaling.dart';
 import '../widgets/controlles_panel.dart';
 import '../widgets/local_stream_view.dart';
 import '../widgets/remote_stream_view.dart';

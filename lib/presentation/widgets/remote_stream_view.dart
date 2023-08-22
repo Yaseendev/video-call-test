@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
+import 'package:video_conf_test/data/repositories/video_call_repository.dart';
 import 'package:video_conf_test/logic/remote_renderer_bloc/remote_renderer_bloc.dart';
 import 'package:video_conf_test/logic/video_call_bloc/video_call_bloc.dart';
 import 'package:video_conf_test/logic/video_call_connection_cubit/video_call_connection_cubit.dart';
+import 'package:video_conf_test/utils/services/service_locator.dart';
 import 'stream_error_view.dart';
 import 'stream_placeholder.dart';
 
@@ -15,13 +17,9 @@ class RemoteStreamView extends StatefulWidget {
 }
 
 class _RemoteStreamViewState extends State<RemoteStreamView> {
-  final RemoteRendererBloc _rendererBloc = RemoteRendererBloc();
-
-  @override
-  void initState() {
-    // _remoteRenderer.initialize();
-    super.initState();
-  }
+  final RemoteRendererBloc _rendererBloc = RemoteRendererBloc(
+    repository: locator.get<VideoCallRepository>(),
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -29,8 +27,6 @@ class _RemoteStreamViewState extends State<RemoteStreamView> {
       listener: (context, state) async {
         if (state is VideoCallInitialized) {
           _rendererBloc.add(InitRemoteRenderer());
-          //_remoteRenderer.srcObject = await createLocalMediaStream('key');
-          //setState(() {});
         } else if (state is VideoCallEnded) {
           _rendererBloc.add(StopRomteVideo());
         }
@@ -71,9 +67,6 @@ class _RemoteStreamViewState extends State<RemoteStreamView> {
                         child: ElevatedButton(
                           onPressed: () {
                             _rendererBloc.add(ToggleRemoteRendererSpeaker());
-                            // setState(() {
-                            //   _remoteRenderer.muted = !_remoteRenderer.muted;
-                            // });
                           },
                           style: ElevatedButton.styleFrom(
                             shape: CircleBorder(),
@@ -107,11 +100,5 @@ class _RemoteStreamViewState extends State<RemoteStreamView> {
         },
       ),
     );
-  }
-
-  @override
-  void dispose() {
-    //_remoteRenderer.dispose();
-    super.dispose();
   }
 }

@@ -30,4 +30,9 @@ class WebRTCProvider {
       RTCPeerConnection peerConnection) async {
     return await WebRTCService.createOffer(peerConnection);
   }
+
+  Future<RTCSessionDescription> createAnswer(
+      RTCPeerConnection peerConnection) async {
+    return await WebRTCService.createAnswer(peerConnection);
+  }
 }

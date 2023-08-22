@@ -2,18 +2,20 @@ import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:video_conf_test/data/repositories/video_call_repository.dart';
-import 'package:video_conf_test/utils/services/service_locator.dart';
 
 part 'remote_renderer_event.dart';
 part 'remote_renderer_state.dart';
 
 class RemoteRendererBloc
     extends Bloc<RemoteRendererEvent, RemoteRendererState> {
-  RemoteRendererBloc()
+    final VideoCallRepository repository;
+  RemoteRendererBloc({
+    required this.repository,
+    RTCVideoRenderer? rtcVideoRenderer,
+  })
       : super(RemoteRendererInitial(
-          RTCVideoRenderer(),
+        rtcVideoRenderer ??  RTCVideoRenderer(),
         )) {
-    final VideoCallRepository repository = locator.get<VideoCallRepository>();
     on<InitRemoteRenderer>((event, emit) async {
       final RTCVideoRenderer renderer = RTCVideoRenderer();
       await renderer.initialize();

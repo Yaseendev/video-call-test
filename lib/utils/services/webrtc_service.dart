@@ -45,14 +45,6 @@ class WebRTCService {
     }
   }
 
-  // static bool toggleMicActivation(
-  //     MediaStream mediaStream, bool micActivationStatus) {
-  //   final MediaStreamTrack audioTrack = mediaStream.getAudioTracks().first;
-  //   audioTrack.enableSpeakerphone(!micActivationStatus);
-  //   //setMicrophoneMute(!micActivationStatus);
-  //   return !micActivationStatus;
-  // }
-
   static bool toggleMicActivation(
       MediaStream mediaStream, bool micActivationStatus) {
     final audioTrack = mediaStream.getAudioTracks().first;
@@ -71,27 +63,31 @@ class WebRTCService {
       MediaStream mediaStream) async {
     final iceServers = ServerConfig.servers;
 
-    final configuration = ServerConfig.configuration;
-    final peerConnection =
-        await createPeerConnection(iceServers, configuration);
-    await peerConnection.addStream(mediaStream);
-    mediaStream.getTracks().forEach((track) {
-      peerConnection.addTrack(track, mediaStream);
-    });
+    //final constraints = ServerConfig.constraints;
+    final peerConnection = await createPeerConnection(iceServers);
     return peerConnection;
   }
 
-    static Future<RTCSessionDescription> createOffer(
+  static Future<RTCSessionDescription> createOffer(
       RTCPeerConnection peerConnection) async {
     final offerSdpConstraints = {
       'mandatory': {
         'OfferToReceiveAudio': true,
         'OfferToReceiveVideo': true,
       },
-      'optional': <dynamic>[],
+      'optional': const [],
     };
     try {
       return await peerConnection.createOffer(offerSdpConstraints);
+    } catch (e) {
+      throw e.toString();
+    }
+  }
+
+  static Future<RTCSessionDescription> createAnswer(
+      RTCPeerConnection peerConnection) async {
+    try {
+      return await peerConnection.createAnswer();
     } catch (e) {
       throw e.toString();
     }

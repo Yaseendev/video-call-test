@@ -1,16 +1,14 @@
 import 'package:bloc/bloc.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:video_conf_test/data/repositories/video_call_repository.dart';
-import 'package:video_conf_test/utils/services/service_locator.dart';
-import 'package:video_conf_test/utils/services/signalling_service.dart';
 
 part 'video_call_connection_state.dart';
 
 class VideoCallConnectionCubit extends Cubit<VideoCallConnectionState> {
-  VideoCallConnectionCubit() : super(VideoCallConnectionInitial());
-  final VideoCallRepository repository = locator.get<VideoCallRepository>();
+  final VideoCallRepository repository;
+  VideoCallConnectionCubit({required this.repository})
+      : super(VideoCallConnectionInitial());
   RTCPeerConnection? peerConnection;
   MediaStream? remoteStream;
 
@@ -19,12 +17,20 @@ class VideoCallConnectionCubit extends Cubit<VideoCallConnectionState> {
         await repository.establishPeerConnectionStream(localStream);
     if (connectionRes.isRight()) {
       peerConnection = connectionRes.getOrElse(() => null);
+      registerPeerConnectionListeners();
+      localStream.getTracks().forEach((track) {
+        peerConnection?.addTrack(track, localStream);
+      });
     } else {
       emit(VideoCallConnectionError());
       return;
     }
-    registerPeerConnectionListeners();
-    repository.createRoom(
+    peerConnection?.onIceCandidate = (RTCIceCandidate candidate) {
+      print('Got candidate: ${candidate.toMap()}');
+      repository.addCallerCandidate(candidate);
+    };
+    await repository.createOffer(peerConnection!);
+    repository.handleCreatingRoom(
       peerConnection,
       remoteStream,
     );
@@ -40,34 +46,56 @@ class VideoCallConnectionCubit extends Cubit<VideoCallConnectionState> {
               await repository.establishPeerConnectionStream(localStream);
           if (connectionRes.isRight()) {
             peerConnection = connectionRes.getOrElse(() => null);
+            registerPeerConnectionListeners();
+            localStream.getTracks().forEach((track) {
+              peerConnection?.addTrack(track, localStream);
+            });
           } else {
             emit(VideoCallConnectionError());
             return;
           }
-          registerPeerConnectionListeners();
+          peerConnection!.onIceCandidate = (RTCIceCandidate? candidate) {
+            if (candidate == null) {
+              print('onIceCandidate: complete!');
+              return;
+            }
+            print('onIceCandidate: ${candidate.toMap()}');
+            repository.addCalleeCandidate(candidate, roomId);
+          };
+          peerConnection?.onTrack = (RTCTrackEvent event) {
+            print('Got remote track: ${event.streams[0]}');
+            event.streams[0].getTracks().forEach((track) {
+              print('Add a track to the remoteStream: $track');
+              remoteStream?.addTrack(track);
+            });
+          };
+
+          final offerRes = await repository.getRoomOffer(roomId);
+          final offer = offerRes.getOrElse(() => null);
+          await peerConnection?.setRemoteDescription(
+            RTCSessionDescription(offer['sdp'], offer['type']),
+          );
+          final answerRes = await repository.createAnswer(peerConnection!);
+          final RTCSessionDescription? answer = answerRes.getOrElse(() => null);
+
+          print('Created Answer $answer');
+          if (answer != null) {
+            await peerConnection!.setLocalDescription(answer);
+
+            repository.handleJoiningRoom(
+              answer,
+              peerConnection,
+              roomId,
+            );
+          }
         }
       },
-    );
-    repository.joinRoom(
-      roomId,
-      localStream,
-      peerConnection,
-      () {
-        registerPeerConnectionListeners();
-      },
-      remoteStream,
     );
   }
 
   void endCall() async {
     peerConnection?.close();
-    var db = FirebaseFirestore.instance;
-    var roomRef = await db.collection('rooms').get();
-    for (var doc in roomRef.docs) {
-      await db.runTransaction((transaction) async {
-        transaction.delete(doc.reference);
-      });
-    }
+    await repository.deleteRoom();
     remoteStream?.dispose();
   }
 

@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
+import 'package:video_conf_test/data/repositories/video_call_repository.dart';
 import 'package:video_conf_test/logic/local_renderer_bloc/local_renderer_bloc.dart';
 import 'package:video_conf_test/logic/video_call_bloc/video_call_bloc.dart';
+import 'package:video_conf_test/utils/services/service_locator.dart';
 
 class LocalStreamView extends StatefulWidget {
   const LocalStreamView({
@@ -14,12 +16,9 @@ class LocalStreamView extends StatefulWidget {
 }
 
 class _LocalStreamViewState extends State<LocalStreamView> {
-  final LocalRendererBloc _localRendererBloc = LocalRendererBloc();
-
-  @override
-  void initState() {
-    super.initState();
-  }
+  final LocalRendererBloc _localRendererBloc = LocalRendererBloc(
+    repository: locator.get<VideoCallRepository>(),
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -52,11 +51,5 @@ class _LocalStreamViewState extends State<LocalStreamView> {
         },
       ),
     );
-  }
-
-  @override
-  void dispose() {
-    //_localRenderer.dispose();
-    super.dispose();
   }
 }
