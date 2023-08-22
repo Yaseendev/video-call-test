@@ -27,7 +27,7 @@ class VideoCallBloc extends Bloc<VideoCallEvent, VideoCallState> {
                 stream: stream,
                 micMuted: state.isMute,
               ));
-              await repository.checkRoom().then(
+              await repository.fetchRoom().then(
                     (value) => value.fold(
                       (l) async {
                         if (l.message == 'No Room') {

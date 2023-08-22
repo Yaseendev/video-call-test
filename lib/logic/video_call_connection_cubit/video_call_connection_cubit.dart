@@ -31,11 +31,28 @@ class VideoCallConnectionCubit extends Cubit<VideoCallConnectionState> {
   }
 
   void joinRoom(String roomId, MediaStream localStream) async {
+    final roomResult = await repository.checkRoom(roomId);
+    roomResult.fold(
+      (l) => null,
+      (exists) async {
+        if (exists) {
+          final connectionRes =
+              await repository.establishPeerConnectionStream(localStream);
+          if (connectionRes.isRight()) {
+            peerConnection = connectionRes.getOrElse(() => null);
+          } else {
+            emit(VideoCallConnectionError());
+            return;
+          }
+          registerPeerConnectionListeners();
+        }
+      },
+    );
     repository.joinRoom(
       roomId,
       localStream,
       peerConnection,
-      (){
+      () {
         registerPeerConnectionListeners();
       },
       remoteStream,

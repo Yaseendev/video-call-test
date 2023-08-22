@@ -8,21 +8,30 @@ class VideoCallDatabaseProvider {
     required this.remoteDB,
   });
 
-  DocumentReference get _roomRef => remoteDB.collection('rooms').doc();
-  Future<QuerySnapshot<Map<String, dynamic>>> get _roomSnapshot async =>
-      await remoteDB.collection('rooms').get();
+  CollectionReference get _roomCollection => remoteDB.collection('rooms');
+  DocumentReference get _roomRef => _roomCollection.doc();
+  Future<QuerySnapshot> get _roomSnapshot async => await _roomCollection.get();
   CollectionReference get _callerCandidatesCollection =>
       _roomRef.collection('callerCandidates');
   CollectionReference get _calleeCandidatesCollection =>
       _roomRef.collection('calleeCandidates');
 
   Future<String?> getRoomId() async {
-    final QuerySnapshot<Map<String, dynamic>> snapshot = await _roomSnapshot;
+    final QuerySnapshot snapshot = await _roomSnapshot;
     final docs = snapshot.docs;
     if (docs.isNotEmpty) {
       return docs.first.id.toString();
     }
     return null;
+  }
+
+  Future<bool> checkRoomId(String roomId) async {
+    try {
+      final roomSnapshot = await _roomCollection.doc(roomId).get();
+      return roomSnapshot.exists;
+    } catch (e) {
+      throw e;
+    }
   }
 
   void addCallerCandidates(Map<String, dynamic> candidate) {
@@ -31,6 +40,6 @@ class VideoCallDatabaseProvider {
 
   Future addToRoom(Map<String, dynamic> data) async => await _roomRef.set(data);
 
-  Stream<DocumentSnapshot<Object?>> getRoomStream() => _roomRef.snapshots(); 
-  Stream getCalleeCandidatesStream() => _calleeCandidatesCollection.snapshots(); 
+  Stream<DocumentSnapshot<Object?>> getRoomStream() => _roomRef.snapshots();
+  Stream getCalleeCandidatesStream() => _calleeCandidatesCollection.snapshots();
 }

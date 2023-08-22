@@ -17,9 +17,16 @@ class VideoCallRepository {
     this.webRTCProvider = webRTCProvider;
   }
 
-  Future<Either<Failure, String>> checkRoom() async {
+  Future<Either<Failure, String>> fetchRoom() async {
     final String? roomId = await databaseProvider.getRoomId();
     return roomId != null ? Right(roomId) : Left(Failure('No Room'));
+  }
+
+  Future<Either<Failure, bool>> checkRoom(String roomId) async {
+    try {
+      return Right(await databaseProvider.checkRoomId(roomId));
+    } catch (e) {}
+    return Left(Failure('No Room'));
   }
 
   Future<void> createRoom(
@@ -84,33 +91,30 @@ class VideoCallRepository {
   }
 
   Future<void> joinRoom(
-    // RTCPeerConnection? peerConnection,
-    // MediaStream? remoteStream,
-    String roomId,
-    MediaStream localStream,
-    RTCPeerConnection? peerConnection,
-    Function s,
-    MediaStream? remoteStream
-  ) async {
-    DocumentReference roomRef =
-        databaseProvider.remoteDB.collection('rooms').doc('$roomId');
-    var roomSnapshot = await roomRef.get();
-    print('Got room ${roomSnapshot.exists}');
+      // RTCPeerConnection? peerConnection,
+      // MediaStream? remoteStream,
+      String roomId,
+      MediaStream localStream,
+      RTCPeerConnection? peerConnection,
+      Function s,
+      MediaStream? remoteStream) async {
+     DocumentReference roomRef =databaseProvider.remoteDB.collection('rooms').doc('$roomId');
+     var roomSnapshot = await roomRef.get();
+    // print('Got room ${roomSnapshot.exists}');
 
-    if (roomSnapshot.exists) {
-      //print('Create PeerConnection with configuration: $configuration');
-      peerConnection =
-          await createPeerConnection(SignallingService.configuration);
-      s();
-      
+    // if (roomSnapshot.exists) {
+    //   //print('Create PeerConnection with configuration: $configuration');
+    //   peerConnection =
+    //       await createPeerConnection(SignallingService.configuration);
+    //   s();
 
-      localStream.getTracks().forEach((track) {
-        peerConnection?.addTrack(track, localStream);
-      });
+    //   localStream.getTracks().forEach((track) {
+    //     peerConnection?.addTrack(track, localStream);
+    //   });
 
       // Code for collecting ICE candidates below
       var calleeCandidatesCollection = roomRef.collection('calleeCandidates');
-      peerConnection.onIceCandidate = (RTCIceCandidate? candidate) {
+      peerConnection?.onIceCandidate = (RTCIceCandidate? candidate) {
         if (candidate == null) {
           print('onIceCandidate: complete!');
           return;
@@ -120,7 +124,7 @@ class VideoCallRepository {
       };
       // Code for collecting ICE candidate above
 
-      peerConnection.onTrack = (RTCTrackEvent event) {
+      peerConnection?.onTrack = (RTCTrackEvent event) {
         print('Got remote track: ${event.streams[0]}');
         event.streams[0].getTracks().forEach((track) {
           print('Add a track to the remoteStream: $track');
@@ -162,7 +166,6 @@ class VideoCallRepository {
           );
         });
       });
-    }
   }
 
   Future<Either<Failure, MediaStream>> getUserMediaStream() async {
@@ -210,8 +213,4 @@ class VideoCallRepository {
     }
   }
 
-  // Future<Either<Failure, String>> createRoom() async {
-  //  RTCPeerConnection peerConnection = await createPeerConnection(SignallingService.configuration);
-
-  // }
 }
