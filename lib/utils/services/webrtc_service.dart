@@ -8,12 +8,23 @@ class WebRTCService {
       'video': true,
       'audio': true,
     };
-
     try {
       return navigator.mediaDevices.getUserMedia(mediaConstraints);
     } catch (e) {
       throw e.toString();
     }
+  }
+
+  static Future<RTCVideoRenderer> deactivateVideoRender(
+      RTCVideoRenderer videoRenderer) async {
+    final List<MediaStreamTrack> tracks = videoRenderer.srcObject!.getTracks();
+    tracks.forEach((track) {
+      track.stop();
+    });
+    await videoRenderer.srcObject?.dispose();
+    videoRenderer.srcObject = null;
+    await videoRenderer.dispose();
+    return videoRenderer;
   }
 
   static Future<bool> switchCamera(MediaStream mediaStream) async {
@@ -64,7 +75,25 @@ class WebRTCService {
     final peerConnection =
         await createPeerConnection(iceServers, configuration);
     await peerConnection.addStream(mediaStream);
-
+    mediaStream.getTracks().forEach((track) {
+      peerConnection.addTrack(track, mediaStream);
+    });
     return peerConnection;
+  }
+
+    static Future<RTCSessionDescription> createOffer(
+      RTCPeerConnection peerConnection) async {
+    final offerSdpConstraints = {
+      'mandatory': {
+        'OfferToReceiveAudio': true,
+        'OfferToReceiveVideo': true,
+      },
+      'optional': <dynamic>[],
+    };
+    try {
+      return await peerConnection.createOffer(offerSdpConstraints);
+    } catch (e) {
+      throw e.toString();
+    }
   }
 }

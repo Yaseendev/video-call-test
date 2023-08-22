@@ -12,22 +12,34 @@ part 'video_call_state.dart';
 class VideoCallBloc extends Bloc<VideoCallEvent, VideoCallState> {
   MediaStream? localStream;
 
-  VideoCallBloc() : super(VideoCallInitial()) {
+  VideoCallBloc() : super(VideoCallInitial(micMuted: false)) {
     final VideoCallRepository repository = locator.get<VideoCallRepository>();
     on<RoomCheck>((event, emit) async {
       await repository.getUserMediaStream().then(
-            (streamRes) => streamRes
-                .fold((l) => emit(VideoCallError(l.message)), (r) async {
+            (streamRes) => streamRes.fold(
+                (l) => emit(VideoCallError(
+                      error: l.message,
+                      micMuted: state.isMute,
+                    )), (r) async {
               final MediaStream stream = r;
               localStream = stream;
-              emit(VideoCallInitialized(stream: stream));
+              emit(VideoCallInitialized(
+                stream: stream,
+                micMuted: state.isMute,
+              ));
               await repository.checkRoom().then(
                     (value) => value.fold(
                       (l) async {
                         if (l.message == 'No Room') {
-                          emit(VideoCallCreating(localStream: stream));
+                          emit(VideoCallCreating(
+                            localStream: stream,
+                            micMuted: state.isMute,
+                          ));
                         } else {
-                          emit(VideoCallError(l.message));
+                          emit(VideoCallError(
+                            error: l.message,
+                            micMuted: state.isMute,
+                          ));
                         }
                       },
                       (roomId) async {
@@ -35,6 +47,7 @@ class VideoCallBloc extends Bloc<VideoCallEvent, VideoCallState> {
                         emit(VideoCallConnecting(
                           roomId: roomId,
                           localStream: localStream!,
+                          micMuted: state.isMute,
                         ));
                       },
                     ),
@@ -46,22 +59,31 @@ class VideoCallBloc extends Bloc<VideoCallEvent, VideoCallState> {
     on<SwitchCamera>((event, emit) async {
       if (localStream != null) {
         final res = await repository.switchCamera(localStream!);
-        res.fold((l) => emit(VideoCallError(l.message)), (r) => null);
+        res.fold(
+            (l) => emit(VideoCallError(
+                  error: l.message,
+                  micMuted: state.isMute,
+                )),
+            (r) => null);
       }
     });
 
     on<SwitchMicActivation>((event, emit) async {
       if (localStream != null) {
         final res = await repository.toggleMicMute(localStream!, event.mute);
-        res.fold((l) => emit(VideoCallError(l.message)), (r) => emit(VideoCallMute(event.mute)));
+        res.fold(
+            (l) => emit(VideoCallError(
+                  error: l.message,
+                  micMuted: state.isMute,
+                )),
+            (r) => emit(VideoCallMute(
+                  mute: event.mute,
+                )));
       }
     });
 
-    on<SwitchSpeakerActivation>((event, emit) async {
-      if (localStream != null) {
-        final res = await repository.toggleMicMute(localStream!, event.enabled);
-        res.fold((l) => emit(VideoCallError(l.message)), (r) => emit(VideoCallSpeakerChanged(event.enabled)));
-      }
+    on<EndVideoCall>((event, emit) {
+      emit(VideoCallEnded());
     });
   }
 }

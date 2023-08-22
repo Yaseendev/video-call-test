@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
+import 'package:video_conf_test/logic/remote_renderer_bloc/remote_renderer_bloc.dart';
 import 'package:video_conf_test/logic/video_call_bloc/video_call_bloc.dart';
 import 'package:video_conf_test/logic/video_call_connection_cubit/video_call_connection_cubit.dart';
 import 'stream_error_view.dart';
@@ -14,11 +15,11 @@ class RemoteStreamView extends StatefulWidget {
 }
 
 class _RemoteStreamViewState extends State<RemoteStreamView> {
-  RTCVideoRenderer _remoteRenderer = RTCVideoRenderer();
+  final RemoteRendererBloc _rendererBloc = RemoteRendererBloc();
 
   @override
   void initState() {
-    _remoteRenderer.initialize();
+    // _remoteRenderer.initialize();
     super.initState();
   }
 
@@ -27,14 +28,17 @@ class _RemoteStreamViewState extends State<RemoteStreamView> {
     return BlocListener<VideoCallBloc, VideoCallState>(
       listener: (context, state) async {
         if (state is VideoCallInitialized) {
-          _remoteRenderer.srcObject = await createLocalMediaStream('key');
-          setState(() {});
+          _rendererBloc.add(InitRemoteRenderer());
+          //_remoteRenderer.srcObject = await createLocalMediaStream('key');
+          //setState(() {});
+        } else if (state is VideoCallEnded) {
+          _rendererBloc.add(StopRomteVideo());
         }
       },
       child: BlocConsumer<VideoCallConnectionCubit, VideoCallConnectionState>(
         listener: (context, state) {
           if (state is VideoCallRemoteStreamAdded) {
-            _remoteRenderer.srcObject = state.remoteStream;
+            _rendererBloc.add(AddRemoteStream(state.remoteStream));
           }
         },
         buildWhen: (previous, current) =>
@@ -47,26 +51,29 @@ class _RemoteStreamViewState extends State<RemoteStreamView> {
           } else if (state is VideoCallConnectionCreated) {
             return StreamPlaceholder(label: 'Waiting for others to join');
           } else if (state is VideoCallRemoteConnected) {
-            return Stack(
-              children: [
-                RTCVideoView(
-                  _remoteRenderer,
-                  objectFit: RTCVideoViewObjectFit.RTCVideoViewObjectFitCover,
-                  placeholderBuilder: (context) => StreamPlaceholder(
-                    label: 'Initializing',
-                  ),
-                ),
-                Align(
-                  alignment: Alignment.topRight,
-                  child: Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: BlocBuilder<VideoCallBloc, VideoCallState>(
-                      builder: (context, state) {
-                        return ElevatedButton(
+            return BlocBuilder<RemoteRendererBloc, RemoteRendererState>(
+              bloc: _rendererBloc,
+              builder: (context, rendererState) {
+                return Stack(
+                  children: [
+                    RTCVideoView(
+                      rendererState.remoteRenderer,
+                      objectFit:
+                          RTCVideoViewObjectFit.RTCVideoViewObjectFitCover,
+                      placeholderBuilder: (context) => StreamPlaceholder(
+                        label: 'Loading',
+                      ),
+                    ),
+                    Align(
+                      alignment: Alignment.topRight,
+                      child: Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: ElevatedButton(
                           onPressed: () {
-                            context
-                                .read<VideoCallBloc>()
-                                .add(SwitchSpeakerActivation(enabled: !state.isSpeakerEnabled));
+                            _rendererBloc.add(ToggleRemoteRendererSpeaker());
+                            // setState(() {
+                            //   _remoteRenderer.muted = !_remoteRenderer.muted;
+                            // });
                           },
                           style: ElevatedButton.styleFrom(
                             shape: CircleBorder(),
@@ -74,20 +81,29 @@ class _RemoteStreamViewState extends State<RemoteStreamView> {
                             padding: EdgeInsets.all(10),
                           ),
                           child: Icon(
-                            state.isSpeakerEnabled
-                                ? Icons.volume_up_rounded
-                                : Icons.volume_off_rounded,
+                            rendererState.remoteRenderer.muted
+                                ? Icons.volume_off_rounded
+                                : Icons.volume_up_rounded,
                             size: 28,
                           ),
-                        );
-                      },
+                        ),
+                      ),
                     ),
-                  ),
-                ),
-              ],
+                  ],
+                );
+              },
+            );
+          } else if (state is VideoCallClosed) {
+            return Center(
+              child: Text('Call Ended',
+              style: TextStyle(
+              color: Colors.white,
+              fontSize: 24,
+            ),
+              ),
             );
           }
-          return StreamPlaceholder(label: 'Loading');
+          return StreamPlaceholder(label: 'Initializing');
         },
       ),
     );
@@ -95,7 +111,7 @@ class _RemoteStreamViewState extends State<RemoteStreamView> {
 
   @override
   void dispose() {
-    _remoteRenderer.dispose();
+    //_remoteRenderer.dispose();
     super.dispose();
   }
 }

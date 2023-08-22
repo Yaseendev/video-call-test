@@ -23,13 +23,10 @@ class SwitchMicActivation extends VideoCallEvent {
   List<Object> get props => [mute];
 }
 
-class SwitchSpeakerActivation extends VideoCallEvent {
-  final bool enabled;
+class EndVideoCall extends VideoCallEvent {
 
-  SwitchSpeakerActivation({
-    required this.enabled,
-  });
+  EndVideoCall();
 
   @override
-  List<Object> get props => [enabled];
+  List<Object> get props => [];
 }

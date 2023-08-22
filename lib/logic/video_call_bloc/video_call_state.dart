@@ -2,10 +2,8 @@ part of 'video_call_bloc.dart';
 
 abstract class VideoCallState extends Equatable {
   final bool isMute;
-  final bool isSpeakerEnabled;
   VideoCallState({
-    this.isMute = false,
-    this.isSpeakerEnabled = true,
+    required this.isMute,
   });
 
   @override
@@ -13,80 +11,96 @@ abstract class VideoCallState extends Equatable {
 }
 
 class VideoCallInitial extends VideoCallState {
+  final bool micMuted;
+
+  VideoCallInitial({
+    required this.micMuted,
+  }) : super( isMute: micMuted);
+
   @override
-  List<Object?> get props => [];
+  List<Object?> get props => [micMuted];
 }
 
 class VideoCallConnecting extends VideoCallState {
   final String roomId;
   final MediaStream localStream;
+  final bool micMuted;
+
   VideoCallConnecting({
     required this.roomId,
     required this.localStream,
-  });
+    required this.micMuted,
+  }) : super( isMute: micMuted);
+
   @override
-  List<Object?> get props => [roomId, localStream];
+  List<Object?> get props => [roomId, localStream, micMuted];
 }
 
 class VideoCallCreating extends VideoCallState {
   final MediaStream localStream;
+  final bool micMuted;
 
   VideoCallCreating({
     required this.localStream,
-  });
+    required this.micMuted,
+  }) : super(isMute: micMuted);
 
   @override
-  List<Object?> get props => [localStream];
+  List<Object?> get props => [localStream, micMuted];
 }
 
 class VideoCallInitialized extends VideoCallState {
   final MediaStream stream;
+  final bool micMuted;
 
-  VideoCallInitialized({required this.stream});
+  VideoCallInitialized({
+    required this.stream,
+    required this.micMuted,
+  }) : super( isMute: micMuted);
 
   @override
-  List<Object?> get props => [this.stream];
+  List<Object?> get props => [stream, micMuted];
 }
 
 class VideoCallConnected extends VideoCallState {
   final MediaStream stream;
+  final bool micMuted;
 
-  VideoCallConnected({required this.stream});
+  VideoCallConnected({
+    required this.stream,
+    required this.micMuted,
+  }) : super(isMute: micMuted);
 
   @override
-  List<Object?> get props => [stream];
+  List<Object?> get props => [stream, micMuted];
 }
 
 class VideoCallError extends VideoCallState {
   final String? error;
   final bool micMuted;
-  final bool speakerEnabled;
 
   VideoCallError(
-      {required this.micMuted, required this.speakerEnabled, this.error}) : super(isSpeakerEnabled: speakerEnabled, isMute: micMuted);
+      {required this.micMuted, this.error})
+      : super( isMute: micMuted);
 
   @override
-  List<Object?> get props => [error, micMuted, speakerEnabled];
+  List<Object?> get props => [error, micMuted];
 }
 
 class VideoCallMute extends VideoCallState {
   final bool mute;
-  final bool speakerEnabled;
 
-  VideoCallMute({required this.mute, required this.speakerEnabled})
-      : super(isMute: mute, isSpeakerEnabled: speakerEnabled);
+  VideoCallMute({required this.mute})
+      : super(isMute: mute);
 
   @override
-  List<Object?> get props => [mute, speakerEnabled];
+  List<Object?> get props => [mute];
 }
 
-class VideoCallSpeakerChanged extends VideoCallState {
-  final bool enabled;
-  final bool micMuted;
+class VideoCallEnded extends VideoCallState {
 
-  VideoCallSpeakerChanged({required this.enabled, required this.micMuted})
-      : super(isSpeakerEnabled: enabled, isMute: micMuted);
+  VideoCallEnded() : super(isMute: false);
 
   @override
-  List<Object?> get props => [enabled, micMuted];
+  List<Object?> get props => [];
 }
