@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:video_conf_test/logic/video_call_bloc/video_call_bloc.dart';
 import 'package:video_conf_test/logic/video_call_connection_cubit/video_call_connection_cubit.dart';
-import 'package:video_conf_test/presentation/screens/home_screen.dart';
+import 'package:video_conf_test/presentation/screens/call_screen.dart';
 import 'package:video_conf_test/utils/services/service_locator.dart';
 import 'data/repositories/video_call_repository.dart';
 import 'firebase_options.dart';
@@ -38,7 +38,7 @@ class MainApp extends StatelessWidget {
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
         theme: ThemeData.dark(),
-        home: const HomeScreen(),
+        home: const CallScreen(),
       ),
     );
   }

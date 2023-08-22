@@ -6,14 +6,14 @@ import '../widgets/controlles_panel.dart';
 import '../widgets/local_stream_view.dart';
 import '../widgets/remote_stream_view.dart';
 
-class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+class CallScreen extends StatefulWidget {
+  const CallScreen({super.key});
 
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
+  State<CallScreen> createState() => _CallScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _CallScreenState extends State<CallScreen> {
   @override
   void initState() {
     super.initState();
@@ -42,13 +42,13 @@ class _HomeScreenState extends State<HomeScreen> {
       },
       child: SafeArea(
         child: Scaffold(
-            extendBody: true,
-            body: SizedBox.expand(
-              child: const RemoteStreamView(),
-            ),
-            floatingActionButton: const LocalStreamView(),
-            bottomNavigationBar: const ControllesPanel(),
-            ),
+          extendBody: true,
+          body: SizedBox.expand(
+            child: const RemoteStreamView(),
+          ),
+          floatingActionButton: const LocalStreamView(),
+          bottomNavigationBar: const ControllesPanel(),
+        ),
       ),
     );
   }
